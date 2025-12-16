@@ -1,0 +1,158 @@
+# Anomaly Detection System Configuration
+
+# BigQuery Settings
+bigquery:
+  project_id: "ccibt-hack25ww7-730"
+  dataset_id: "hackaton"
+  location: "us-central1"
+
+# Baseline Calculation Settings
+baseline:
+  # AI-Driven Optimization
+  use_ai_optimization: true  # Enable AI to recommend optimal calculation methods
+  ai_confidence_threshold: 0.75  # Minimum confidence to use AI recommendation (0.0-1.0)
+  fallback_to_rules: true  # Use rule-based logic if AI fails or confidence is low
+  
+  # Time window for baseline calculation
+  lookback_days: 30  # Number of days of historical data to analyze
+  
+  # Calculation method: "simple_stats", "rolling_average", "seasonal_decomposition"
+  # Note: When use_ai_optimization=true, AI will override this for each metric
+  calculation_method: "simple_stats"  # Used as fallback when AI is disabled
+  
+  # Refresh frequency
+  refresh_schedule: "daily"  # Options: "hourly", "daily", "weekly", "manual"
+  refresh_time: "02:00"  # Time of day for scheduled refresh (24-hour format)
+  
+  # Statistical parameters
+  percentiles:
+    - 50  # Median
+    - 95  # 95th percentile
+    - 99  # 99th percentile
+  
+  # Metrics to calculate baselines for
+  metrics:
+    - name: "error_rate"
+      column: "Error_Rate _%_"
+      table: "cloud_workload_dataset"
+      enabled: true
+      priority: 1
+      
+    - name: "cpu_utilization"
+      column: "CPU_Utilization _%_"
+      table: "cloud_workload_dataset"
+      enabled: true
+      priority: 2
+      
+    - name: "memory_consumption"
+      column: "Memory_Consumption _MB_"
+      table: "cloud_workload_dataset"
+      enabled: true
+      priority: 3
+      
+    - name: "execution_time"
+      column: "Task_Execution_Time _ms_"
+      table: "cloud_workload_dataset"
+      enabled: true
+      priority: 4
+  
+  # Advanced baseline models (for future use)
+  advanced_models:
+    # Rolling average baseline
+    rolling_average:
+      window_size: 7  # days
+      min_periods: 3
+    
+    # Seasonal decomposition
+    seasonal_decomposition:
+      period: 7  # weekly seasonality
+      model: "additive"  # or "multiplicative"
+    
+    # Exponential smoothing
+    exponential_smoothing:
+      alpha: 0.3  # smoothing factor
+      beta: 0.1   # trend factor
+      gamma: 0.1  # seasonal factor
+
+# Detection Settings
+detection:
+  # Anomaly detection threshold (standard deviations)
+  threshold_sigma: 2.5
+  
+  # Analysis window
+  analysis_window_hours: 24
+  
+  # Minimum confidence for anomaly
+  min_confidence: 0.7
+  
+  # Detectors configuration
+  detectors:
+    - name: "error_rate"
+      enabled: true
+      priority: 1
+      method: "z_score"
+      threshold: 2.5
+      
+    - name: "cpu_spike"
+      enabled: false  # Enable when ready
+      priority: 2
+      method: "z_score"
+      threshold: 2.5
+      
+    - name: "memory_spike"
+      enabled: false  # Enable when ready
+      priority: 3
+      method: "z_score"
+      threshold: 2.5
+      
+    - name: "performance_degradation"
+      enabled: false  # Enable when ready
+      priority: 4
+      method: "percentile"
+      threshold_percentile: 95
+
+# Insight Generation (ADK)
+insight:
+  # Model selection
+  model: "gemini-1.5-pro"  # Options: "gemini-1.5-pro", "gemini-1.5-flash"
+  
+  # Generation parameters
+  max_tokens: 1024
+  temperature: 0.3
+  
+  # Correlation settings
+  correlation_window_hours: 2
+  min_correlation_score: 0.7
+  
+  # Maximum concurrent insight generations
+  max_concurrent: 5
+
+# Notification Settings (for future use)
+notifications:
+  email:
+    enabled: false
+    recipients: []
+  
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#ops-alerts"
+  
+  pagerduty:
+    enabled: false
+    api_key: ""
+
+# Logging and Monitoring
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "json"  # json or text
+  
+monitoring:
+  enabled: true
+  metrics_export: true
+  
+# Development Settings
+development:
+  debug_mode: false
+  use_sample_data: false
+  max_rows_for_testing: 1000
